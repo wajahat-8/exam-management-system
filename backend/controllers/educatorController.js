@@ -59,18 +59,22 @@ exports.getQuestions = async (req, res) => {
 };
 
 exports.createExam = async (req, res) => {
-  const { title, description, questions, scheduledDate, duration, assignedCourses, assignedDepartments, rules, groupId, groupName, groupDescription, randomAssign, assignCount } = req.body;
+  const { title, description, questions, scheduledDate, duration, assignedCourses, assignedDepartments, rules, groupId, groupName, groupDescription, subject, randomAssign, assignCount } = req.body;
   try {
+    if (!groupId) {
+      return res.status(400).json({ message: 'Exam Group ID is required.' });
+    }
+
     if (!Array.isArray(questions) || questions.length === 0) {
       return res.status(400).json({ message: 'Please select at least one question before creating the exam.' });
     }
 
-    const group = groupId || `GRP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     const exam = new Exam({
       title,
-      groupId: group,
+      groupId,
       groupName,
       groupDescription,
+      subject,
       description,
       questions,
       scheduledDate,
@@ -312,15 +316,35 @@ exports.getStudentPerformance = async (req, res) => {
 };
 
 exports.generateReport = async (req, res) => {
-  // Simple report: average scores per exam
+  // Detailed report: exam summary plus student results for each exam by this educator
   try {
     const exams = await Exam.find({ educator: req.user.id });
     const reports = [];
+
     for (const exam of exams) {
-      const results = await Result.find({ exam: exam._id });
-      const avgScore = results.reduce((sum, r) => sum + r.percentage, 0) / results.length || 0;
-      reports.push({ exam: exam.title, averageScore: avgScore, totalStudents: results.length });
+      const results = await Result.find({ exam: exam._id }).populate('student', 'name');
+      const totalStudents = results.length;
+      const averageScore = totalStudents > 0
+        ? results.reduce((sum, r) => sum + (r.percentage || 0), 0) / totalStudents
+        : 0;
+
+      reports.push({
+        examId: exam._id,
+        examTitle: exam.title,
+        averageScore,
+        totalStudents,
+        results: results.map((result) => ({
+          resultId: result._id,
+          studentId: result.student?._id || null,
+          studentName: result.student?.name || 'Unknown',
+          score: result.score,
+          totalQuestions: result.totalQuestions,
+          percentage: result.percentage,
+          submittedAt: result.submittedAt,
+        })),
+      });
     }
+
     res.json(reports);
   } catch (err) {
     res.status(500).json({ message: err.message });

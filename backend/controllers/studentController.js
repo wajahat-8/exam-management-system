@@ -109,18 +109,25 @@ exports.submitExam = async (req, res) => {
       }
     });
 
+    const answerArray = Object.entries(answers || {}).map(([questionId, answer]) => ({
+      question: questionId,
+      answer,
+    }));
+
     // Save result
+    const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
     const result = new Result({
       student: req.user.id,
       exam: req.params.id,
-      answers,
+      answers: answerArray,
       score,
       totalQuestions,
+      percentage,
       submittedAt: new Date(),
     });
     await result.save();
 
-    res.json({ message: 'Exam submitted', score, totalQuestions });
+    res.json({ message: 'Exam submitted', score, totalQuestions, percentage });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

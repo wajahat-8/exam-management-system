@@ -5,6 +5,7 @@ const examSchema = new mongoose.Schema({
   groupId: { type: String, required: true, index: true },
   groupName: { type: String },
   groupDescription: { type: String },
+  subject: { type: String },
   description: { type: String },
   educator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   questions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Question' }],

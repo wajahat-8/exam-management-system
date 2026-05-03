@@ -14,7 +14,22 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/examdb', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('MongoDB connected'))
+.then(async () => {
+  console.log('MongoDB connected');
+
+  // Remove legacy examCode unique index if it still exists,
+  // because the current flow uses groupId for grouping and doesn't require examCode.
+  try {
+    const examCollection = mongoose.connection.collection('exams');
+    const indexes = await examCollection.indexes();
+    if (indexes.some((index) => index.name === 'examCode_1')) {
+      console.log('Dropping legacy examCode_1 index');
+      await examCollection.dropIndex('examCode_1');
+    }
+  } catch (indexErr) {
+    console.log('Index cleanup skipped or failed:', indexErr.message);
+  }
+})
 .catch(err => console.log(err));
 
 // Routes
