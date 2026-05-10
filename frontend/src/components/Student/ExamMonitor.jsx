@@ -41,6 +41,22 @@ const ExamMonitor = ({ examId, onViolation }) => {
   useEffect(() => {
     const startMonitoring = async () => {
       try {
+        const activateSession = async (location = null) => {
+          try {
+            const res = await axios.post(
+              'http://localhost:5000/api/monitoring/start',
+              { examId, location },
+              { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+            );
+            setSessionId(res.data._id);
+          } catch (err) {
+            console.error('Failed to start monitoring session on backend:', err);
+          } finally {
+            // Always activate monitoring locally so camera starts
+            setMonitoringActive(true);
+          }
+        };
+
         // Get initial location
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -51,15 +67,7 @@ const ExamMonitor = ({ examId, onViolation }) => {
                 accuracy: position.coords.accuracy
               };
               setInitialLocation(location);
-
-              // Start monitoring session on backend
-              const res = await axios.post(
-                'http://localhost:5000/api/monitoring/start',
-                { examId, location },
-                { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-              );
-              setSessionId(res.data._id);
-              setMonitoringActive(true);
+              await activateSession(location);
 
               // Watch location changes
               watchIdRef.current = navigator.geolocation.watchPosition(
@@ -86,16 +94,18 @@ const ExamMonitor = ({ examId, onViolation }) => {
                 { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
               );
             },
-            (error) => {
+            async (error) => {
               console.error('Failed to get initial location:', error);
-              alert('Please enable location access for proctoring');
-            }
+              await activateSession(null);
+            },
+            { timeout: 5000 } // Timeout added here to prevent hanging!
           );
         } else {
-          alert('Geolocation not supported');
+          await activateSession(null);
         }
       } catch (err) {
         console.error('Failed to start monitoring:', err);
+        setMonitoringActive(true); // Fallback
       }
     };
 

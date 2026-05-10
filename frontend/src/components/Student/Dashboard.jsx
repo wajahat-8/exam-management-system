@@ -1,18 +1,25 @@
+import { useState } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../AuthContext.jsx';
 import Profile from './Profile.jsx';
 import Exams from './Exams.jsx';
 import Results from './Results.jsx';
 import TakeExam from './TakeExam.jsx';
+import CameraCheck from './CameraCheck.jsx';
 
 const StudentDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [cameraGranted, setCameraGranted] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  if (!cameraGranted) {
+    return <CameraCheck onVerified={() => setCameraGranted(true)} />;
+  }
 
   return (
     <div className="dashboard">

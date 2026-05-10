@@ -11,16 +11,18 @@ const TakeExam = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [violationCount, setViolationCount] = useState(0);
   const [timeTracker, setTimeTracker] = useState({});
+  const [examStarted, setExamStarted] = useState(false);
 
   useEffect(() => {
     fetchExam();
   }, [id]);
 
   useEffect(() => {
-    if (exam && timeLeft > 0) {
+    if (exam && timeLeft > 0 && examStarted) {
       const timer = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -32,11 +34,11 @@ const TakeExam = () => {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [exam, timeLeft]);
+  }, [exam, timeLeft, examStarted]);
 
   // Track time per question
   useEffect(() => {
-    if (exam && !submitting && exam.questions && exam.questions.length > 0) {
+    if (exam && !submitting && examStarted && exam.questions && exam.questions.length > 0) {
       const timer = setInterval(() => {
         const qId = exam.questions[currentQuestion]._id;
         setTimeTracker(prev => ({
@@ -46,7 +48,7 @@ const TakeExam = () => {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [exam, currentQuestion, submitting]);
+  }, [exam, currentQuestion, submitting, examStarted]);
 
   const fetchExam = async () => {
     try {
@@ -61,8 +63,7 @@ const TakeExam = () => {
       setAnswers(initialAnswers);
     } catch (err) {
       console.error('Failed to fetch exam:', err);
-      alert('Failed to load exam');
-      navigate('/student/exams');
+      setError(err.response?.data?.message || 'Failed to load exam');
     } finally {
       setLoading(false);
     }
@@ -75,12 +76,6 @@ const TakeExam = () => {
   const handleNext = () => {
     if (currentQuestion < exam.questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
     }
   };
 
@@ -116,14 +111,99 @@ const TakeExam = () => {
 
   if (loading) return <div className="panel"><p>Loading exam...</p></div>;
 
+  if (error) {
+    return (
+      <div className="instructions-container">
+        <div className="instructions-card" style={{ textAlign: 'center', padding: '60px 40px' }}>
+          <div className="camera-check-icon" style={{ fontSize: '64px', marginBottom: '24px' }}>🛑</div>
+          <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>Access Denied</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '18px', marginBottom: '32px' }}>{error}</p>
+          <button className="button button--primary" style={{ padding: '12px 32px', fontSize: '16px' }} onClick={() => navigate('/student/exams')}>
+            Return to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!exam) return <div className="panel"><p>Exam not found.</p></div>;
 
-  const question = exam.questions[currentQuestion];
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  if (!examStarted) {
+    return (
+      <div className="instructions-container">
+        <div className="instructions-card">
+          <div className="instructions-header">
+            <h2>{exam.title}</h2>
+            <div className="badge badge-duration">{exam.duration} Minutes</div>
+          </div>
+          
+          <div className="instructions-content">
+            <h3>Exam Rules & Proctoring Guidelines</h3>
+            <p className="subtitle">Please read the following instructions carefully. Your session will be monitored to ensure academic integrity.</p>
+            
+            <ul className="rules-list">
+              <li>
+                <span className="icon">📷</span>
+                <div>
+                  <strong>Camera & Face Detection</strong>
+                  <p>Your camera must remain on throughout the exam. Ensure your face is clearly visible and well-lit.</p>
+                </div>
+              </li>
+              <li>
+                <span className="icon">🛑</span>
+                <div>
+                  <strong>Do Not Switch Tabs</strong>
+                  <p>Navigating away from the exam window or switching tabs is strictly prohibited and will be logged.</p>
+                </div>
+              </li>
+              <li>
+                <span className="icon">📍</span>
+                <div>
+                  <strong>Location Tracking</strong>
+                  <p>Your location is verified at the start. Moving significantly during the exam may trigger an alert.</p>
+                </div>
+              </li>
+              <li>
+                <span className="icon">⚠️</span>
+                <div>
+                  <strong>Violations</strong>
+                  <p>Severe or multiple violations (e.g., covering camera, opening other apps) will result in automatic submission of your exam.</p>
+                </div>
+              </li>
+            </ul>
+
+            <div className="good-luck-message">
+              <h3>Do your best!</h3>
+              <p>Take a deep breath and start when you are ready.</p>
+            </div>
+          </div>
+
+          <div className="instructions-footer">
+            <button 
+              className="button button--secondary" 
+              onClick={() => navigate('/student/exams')}
+            >
+              Cancel
+            </button>
+            <button 
+              className="button button--primary button--start-exam" 
+              onClick={() => setExamStarted(true)}
+            >
+              Start Exam
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const question = exam.questions[currentQuestion];
 
   return (
     <>
@@ -133,6 +213,9 @@ const TakeExam = () => {
           <h3>{exam.title}</h3>
           <div className="timer">Time Left: {formatTime(timeLeft)}</div>
           <div className="progress">Question {currentQuestion + 1} of {exam.questions.length}</div>
+          <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '5px', fontWeight: 'bold' }}>
+            ⚠️ Forward navigation only. You cannot return to previous questions once you move next.
+          </div>
           {violationCount > 0 && (
             <div style={{ color: violationCount > 5 ? '#f44336' : '#ff9800', marginTop: '10px', fontWeight: 'bold' }}>
               ⚠️ Violations Detected: {violationCount}
@@ -158,17 +241,10 @@ const TakeExam = () => {
           </div>
         </div>
 
-        <div className="exam-footer">
-          <button
-            className="button button--secondary"
-            onClick={handlePrev}
-            disabled={currentQuestion === 0}
-          >
-            Previous
-          </button>
+        <div className="exam-footer" style={{ justifyContent: 'flex-end' }}>
           {currentQuestion < exam.questions.length - 1 ? (
             <button className="button button--primary" onClick={handleNext}>
-              Next
+              Next Question
             </button>
           ) : (
             <button

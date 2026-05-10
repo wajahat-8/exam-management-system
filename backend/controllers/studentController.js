@@ -61,7 +61,12 @@ exports.joinExam = async (req, res) => {
 
 exports.getResults = async (req, res) => {
   try {
-    const results = await Result.find({ student: req.user.id }).populate('exam', 'title scheduledDate');
+    const results = await Result.find({ student: req.user.id })
+      .populate('exam', 'title scheduledDate')
+      .populate({
+        path: 'answers.question',
+        select: 'questionText options correctAnswer'
+      });
     res.json(results);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -77,12 +82,20 @@ exports.getExamForTaking = async (req, res) => {
     if (!exam.enrolledStudents.includes(req.user.id)) {
       return res.status(403).json({ message: 'Not enrolled in this exam' });
     }
+
     // Check if exam is scheduled
     const now = new Date();
     const scheduled = new Date(exam.scheduledDate);
     if (now < scheduled) {
       return res.status(400).json({ message: 'Exam not yet started' });
     }
+
+    // Check if student has already taken this exam
+    const existingResult = await Result.findOne({ student: req.user.id, exam: req.params.id });
+    if (existingResult) {
+      return res.status(403).json({ message: 'You have already completed this exam' });
+    }
+
     res.json(exam);
   } catch (err) {
     res.status(500).json({ message: err.message });

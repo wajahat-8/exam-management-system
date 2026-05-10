@@ -63,3 +63,402 @@ textarea {
 a {
   color: var(--text-link);
 }
+
+/* Premium UI Enhancements for Secure Exam Flow */
+
+/* Camera Check Screen */
+.camera-check-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 40px);
+  padding: 20px;
+  background: linear-gradient(135deg, var(--bg-page) 0%, var(--bg-accent) 100%);
+}
+
+.camera-check-card {
+  background: var(--bg-surface);
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: var(--shadow-medium);
+  max-width: 500px;
+  text-align: center;
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.camera-check-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--text-accent));
+}
+
+.camera-check-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  animation: pulse 2s infinite;
+}
+
+.camera-check-card h2 {
+  font-size: 24px;
+  color: var(--text-primary);
+  margin: 0 0 16px;
+  font-weight: 700;
+}
+
+.camera-check-card p {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin: 0 0 32px;
+  line-height: 1.6;
+}
+
+.camera-check-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.success-message {
+  color: var(--success);
+  font-weight: 600;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.4s ease;
+}
+
+.alert-error {
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border: 1px solid #f87171;
+  text-align: left;
+  font-size: 14px;
+}
+
+/* Spinner */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+/* Pre-Exam Instructions */
+.instructions-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.instructions-card {
+  background: var(--bg-surface);
+  border-radius: 24px;
+  box-shadow: var(--shadow-medium);
+  max-width: 700px;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  animation: slideUp 0.5s ease-out;
+}
+
+.instructions-header {
+  background: linear-gradient(135deg, var(--text-accent), var(--primary));
+  padding: 32px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.instructions-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+}
+
+.badge-duration {
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.instructions-content {
+  padding: 40px 32px;
+}
+
+.instructions-content h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  color: var(--text-primary);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin-bottom: 32px;
+}
+
+.rules-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px;
+  display: grid;
+  gap: 20px;
+}
+
+.rules-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--bg-surface-muted);
+  padding: 20px;
+  border-radius: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rules-list li:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+}
+
+.rules-list .icon {
+  font-size: 28px;
+  background: white;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.rules-list strong {
+  display: block;
+  font-size: 16px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.rules-list p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.good-luck-message {
+  text-align: center;
+  padding: 24px;
+  background: var(--bg-accent);
+  border-radius: 16px;
+  color: var(--text-primary);
+}
+
+.good-luck-message h3 {
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.instructions-footer {
+  padding: 24px 32px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  background: var(--bg-surface-muted);
+}
+
+.button--start-exam {
+  font-size: 16px;
+  padding: 12px 32px;
+  background: linear-gradient(135deg, var(--primary), var(--text-accent));
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.button--start-exam:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Results Breakdown UI */
+.results-list {
+  display: grid;
+  gap: 20px;
+}
+
+.result-card {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.result-card:hover {
+  box-shadow: var(--shadow-medium);
+}
+
+.result-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  background: var(--bg-surface-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.result-score-badge {
+  background: linear-gradient(135deg, var(--primary), var(--text-accent));
+  color: white;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.score-text {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.score-subtext {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+.result-card-actions {
+  padding: 16px 24px;
+}
+
+.button--full-width {
+  width: 100%;
+}
+
+.result-details-panel {
+  padding: 24px;
+  background: var(--bg-page);
+  border-top: 1px solid var(--border);
+  animation: fadeIn 0.3s ease;
+}
+
+.question-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.question-breakdown-item {
+  display: flex;
+  gap: 16px;
+  background: var(--bg-surface);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border);
+}
+
+.question-breakdown-item.correct {
+  border-left-color: var(--success);
+}
+
+.question-breakdown-item.incorrect {
+  border-left-color: #f43f5e; /* Rose 500 */
+}
+
+.qb-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 40px;
+}
+
+.qb-number {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.qb-icon {
+  font-size: 20px;
+}
+
+.qb-content {
+  flex: 1;
+}
+
+.qb-text {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: var(--text-primary);
+}
+
+.qb-answers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.qb-answer-row {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--bg-surface-muted);
+}
+
+.correct-text {
+  color: var(--success-hover);
+  background: #f0fdf4; /* Green 50 */
+  border: 1px solid #bbf7d0; /* Green 200 */
+}
+
+.incorrect-text {
+  color: #be123c; /* Rose 700 */
+  background: #fff1f2; /* Rose 50 */
+  border: 1px solid #fecdd3; /* Rose 200 */
+}
