@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ExamMonitor from './ExamMonitor.jsx';
 
 const TakeExam = () => {
   const { id } = useParams();
@@ -11,6 +12,8 @@ const TakeExam = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [violationCount, setViolationCount] = useState(0);
+  const [timeTracker, setTimeTracker] = useState({});
 
   useEffect(() => {
     fetchExam();
@@ -30,6 +33,20 @@ const TakeExam = () => {
       return () => clearInterval(timer);
     }
   }, [exam, timeLeft]);
+
+  // Track time per question
+  useEffect(() => {
+    if (exam && !submitting && exam.questions && exam.questions.length > 0) {
+      const timer = setInterval(() => {
+        const qId = exam.questions[currentQuestion]._id;
+        setTimeTracker(prev => ({
+          ...prev,
+          [qId]: (prev[qId] || 0) + 1
+        }));
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [exam, currentQuestion, submitting]);
 
   const fetchExam = async () => {
     try {
@@ -68,9 +85,13 @@ const TakeExam = () => {
   };
 
   const handleSubmit = async () => {
+    if (submitting) return; // Prevent multiple submissions
     setSubmitting(true);
     try {
-      await axios.post(`http://localhost:5000/api/students/submit/${id}`, { answers });
+      await axios.post(`http://localhost:5000/api/students/submit/${id}`, { 
+        answers, 
+        timeTracker 
+      });
       alert('Exam submitted successfully');
       navigate('/student/results');
     } catch (err) {
@@ -78,6 +99,18 @@ const TakeExam = () => {
       alert('Failed to submit exam');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleViolation = (count, type) => {
+    setViolationCount(count);
+    // Auto-submit only on severe/immediate violations like tab switch, window blur, or camera covered
+    if ((type === 'tab_switch' || type === 'screen_blur' || type === 'face_absence') && !submitting) {
+      alert(`Violation detected (${type}). Your exam is being automatically submitted.`);
+      handleSubmit();
+    } else if (count > 5 && !submitting) {
+      alert('Too many violations detected. Your exam is being automatically submitted.');
+      handleSubmit();
     }
   };
 
@@ -93,54 +126,62 @@ const TakeExam = () => {
   };
 
   return (
-    <div className="panel">
-      <div className="exam-header">
-        <h3>{exam.title}</h3>
-        <div className="timer">Time Left: {formatTime(timeLeft)}</div>
-        <div className="progress">Question {currentQuestion + 1} of {exam.questions.length}</div>
-      </div>
+    <>
+      <ExamMonitor examId={id} onViolation={handleViolation} />
+      <div className="panel">
+        <div className="exam-header">
+          <h3>{exam.title}</h3>
+          <div className="timer">Time Left: {formatTime(timeLeft)}</div>
+          <div className="progress">Question {currentQuestion + 1} of {exam.questions.length}</div>
+          {violationCount > 0 && (
+            <div style={{ color: violationCount > 5 ? '#f44336' : '#ff9800', marginTop: '10px', fontWeight: 'bold' }}>
+              ⚠️ Violations Detected: {violationCount}
+            </div>
+          )}
+        </div>
 
-      <div className="question-card">
-        <h4>{question.questionText}</h4>
-        <div className="options">
-          {question.options.map((option, index) => (
-            <label key={index} className="option">
-              <input
-                type="radio"
-                name={`question-${question._id}`}
-                value={option}
-                checked={answers[question._id] === option}
-                onChange={() => handleAnswerChange(question._id, option)}
-              />
-              {option}
-            </label>
-          ))}
+        <div className="question-card">
+          <h4>{question.questionText}</h4>
+          <div className="options">
+            {question.options.map((option, index) => (
+              <label key={index} className="option">
+                <input
+                  type="radio"
+                  name={`question-${question._id}`}
+                  value={option}
+                  checked={answers[question._id] === option}
+                  onChange={() => handleAnswerChange(question._id, option)}
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="exam-footer">
+          <button
+            className="button button--secondary"
+            onClick={handlePrev}
+            disabled={currentQuestion === 0}
+          >
+            Previous
+          </button>
+          {currentQuestion < exam.questions.length - 1 ? (
+            <button className="button button--primary" onClick={handleNext}>
+              Next
+            </button>
+          ) : (
+            <button
+              className="button button--success"
+              onClick={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? 'Submitting...' : 'Submit Exam'}
+            </button>
+          )}
         </div>
       </div>
-
-      <div className="exam-footer">
-        <button
-          className="button button--secondary"
-          onClick={handlePrev}
-          disabled={currentQuestion === 0}
-        >
-          Previous
-        </button>
-        {currentQuestion < exam.questions.length - 1 ? (
-          <button className="button button--primary" onClick={handleNext}>
-            Next
-          </button>
-        ) : (
-          <button
-            className="button button--success"
-            onClick={handleSubmit}
-            disabled={submitting}
-          >
-            {submitting ? 'Submitting...' : 'Submit Exam'}
-          </button>
-        )}
-      </div>
-    </div>
+    </>
   );
 };
 

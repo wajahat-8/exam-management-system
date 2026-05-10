@@ -90,7 +90,7 @@ exports.getExamForTaking = async (req, res) => {
 };
 
 exports.submitExam = async (req, res) => {
-  const { answers } = req.body;
+  const { answers, timeTracker } = req.body;
   try {
     const exam = await Exam.findById(req.params.id).populate('questions');
     if (!exam) {
@@ -112,6 +112,7 @@ exports.submitExam = async (req, res) => {
     const answerArray = Object.entries(answers || {}).map(([questionId, answer]) => ({
       question: questionId,
       answer,
+      timeSpent: timeTracker && timeTracker[questionId] ? timeTracker[questionId] : 0
     }));
 
     // Save result

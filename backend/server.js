@@ -36,6 +36,7 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/examdb', {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/students', require('./routes/students'));
 app.use('/api/educators', require('./routes/educators'));
+app.use('/api/monitoring', require('./routes/monitoring'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

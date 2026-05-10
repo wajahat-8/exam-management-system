@@ -4,6 +4,7 @@ import Profile from './Profile.jsx';
 import Questions from './Questions.jsx';
 import Exams from './Exams.jsx';
 import Reports from './Reports.jsx';
+import Monitoring from './Monitoring.jsx';
 
 const EducatorDashboard = () => {
   const { user, logout } = useAuth();
@@ -25,6 +26,7 @@ const EducatorDashboard = () => {
           <li><Link to="/educator/profile">Profile</Link></li>
           <li><Link to="/educator/questions">Questions</Link></li>
           <li><Link to="/educator/exams">Exams</Link></li>
+          <li><Link to="/educator/monitoring">Monitoring</Link></li>
           <li><Link to="/educator/reports">Reports</Link></li>
         </ul>
         <div style={{ padding: '20px' }}>
@@ -37,6 +39,7 @@ const EducatorDashboard = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="questions" element={<Questions />} />
           <Route path="exams" element={<Exams />} />
+          <Route path="monitoring" element={<Monitoring />} />
           <Route path="reports" element={<Reports />} />
         </Routes>
       </main>
