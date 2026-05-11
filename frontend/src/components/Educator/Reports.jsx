@@ -4,74 +4,132 @@ import axios from 'axios';
 const Reports = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(null);
 
   useEffect(() => {
-    const fetchReports = async () => {
+    const fetch = async () => {
       setLoading(true);
       try {
         const res = await axios.get('http://localhost:5000/api/educators/reports');
         setReports(res.data);
-      } catch (err) {
-        console.error('Failed to fetch reports:', err);
-        alert('Failed to load reports');
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
     };
-
-    fetchReports();
+    fetch();
   }, []);
+
+  const totalStudents = reports.reduce((a, r) => a + r.totalStudents, 0);
+  const avgScore = reports.length
+    ? (reports.reduce((a, r) => a + r.averageScore, 0) / reports.length).toFixed(1)
+    : 0;
 
   return (
     <div className="panel">
-      <div className="page-title">
-        <h3>Reports</h3>
-        <p>Review exam summary and individual student performance for each variant.</p>
+      <div className="page-header">
+        <h2>📊 Reports</h2>
+        <p>Exam performance summaries and per-student breakdowns</p>
       </div>
 
-      {loading ? (
-        <p>Loading reports...</p>
-      ) : reports.length === 0 ? (
-        <p>No reports available yet. Publish exams and have students submit answers to generate reports.</p>
-      ) : (
-        reports.map((report) => (
-          <div key={report.examId} className="panel-form">
-            <h4>{report.examTitle}</h4>
-            <p><strong>Average Score:</strong> {report.averageScore.toFixed(2)}%</p>
-            <p><strong>Total Students:</strong> {report.totalStudents}</p>
+      {/* Summary stat cards */}
+      {!loading && reports.length > 0 && (
+        <div className="stat-cards">
+          {[
+            { icon: '📋', label: 'Total Exams',   value: reports.length },
+            { icon: '👥', label: 'Total Submissions', value: totalStudents },
+            { icon: '📈', label: 'Avg Score',     value: `${avgScore}%` },
+          ].map(s => (
+            <div key={s.label} className="stat-card">
+              <span className="stat-card-icon">{s.icon}</span>
+              <div className="stat-card-value">{s.value}</div>
+              <div className="stat-card-label">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
-            {report.results.length === 0 ? (
-              <p style={{ padding: '12px', color: 'var(--text-secondary)' }}>
-                No student results recorded for this exam yet.
-              </p>
-            ) : (
-              <div className="table-responsive">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>Student ID</th>
-                      <th>Name</th>
-                      <th>Score</th>
-                      <th>Percentage</th>
-                      <th>Submitted At</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.results.map((result) => (
-                      <tr key={result.resultId}>
-                        <td>{result.studentId || 'N/A'}</td>
-                        <td>{result.studentName}</td>
-                        <td>{result.score}/{result.totalQuestions}</td>
-                        <td>{result.percentage?.toFixed(2)}%</td>
-                        <td>{new Date(result.submittedAt).toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      {loading ? (
+        <div className="loading-state"><div className="spinner" /><span>Loading reports…</span></div>
+      ) : reports.length === 0 ? (
+        <div className="empty-state">
+          <span className="empty-state-icon">📊</span>
+          <h4>No reports yet</h4>
+          <p>Reports appear here after students submit exam answers.</p>
+        </div>
+      ) : (
+        <div className="card-list">
+          {reports.map(report => {
+            const isExpanded = expanded === report.examId;
+            const pct = report.averageScore?.toFixed(1);
+            const color = report.averageScore >= 70 ? 'var(--success)' : report.averageScore >= 40 ? 'var(--warning)' : 'var(--danger)';
+
+            return (
+              <div key={report.examId} className="card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+                  <div>
+                    <h4 style={{ margin: '0 0 6px' }}>{report.examTitle}</h4>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <span className="badge">👥 {report.totalStudents} students</span>
+                    </div>
+                  </div>
+                  {/* Score ring */}
+                  <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 72, height: 72, borderRadius: '50%', border: `5px solid ${color}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-muted)' }}>
+                      <span style={{ fontSize: '17px', fontWeight: 800, color, lineHeight: 1 }}>{pct}%</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>avg</span>
+                    </div>
+                  </div>
+                </div>
+
+                {report.results.length > 0 && (
+                  <div className="card-footer">
+                    <button className="button button--secondary button--sm"
+                      onClick={() => setExpanded(isExpanded ? null : report.examId)}>
+                      {isExpanded ? '▲ Hide Results' : '▼ View Student Results'}
+                    </button>
+                  </div>
+                )}
+
+                {isExpanded && (
+                  <div style={{ marginTop: '16px', animation: 'fadeIn 0.25s ease' }}>
+                    <div className="table-responsive">
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Student ID</th>
+                            <th>Score</th>
+                            <th>%</th>
+                            <th>Submitted</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {report.results.map((r, i) => (
+                            <tr key={r.resultId}>
+                              <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
+                              <td style={{ fontWeight: 600 }}>{r.studentName}</td>
+                              <td>{r.studentId || '—'}</td>
+                              <td>{r.score}/{r.totalQuestions}</td>
+                              <td>
+                                <span style={{
+                                  fontWeight: 700,
+                                  color: r.percentage >= 70 ? 'var(--success)' : r.percentage >= 40 ? 'var(--warning)' : 'var(--danger)'
+                                }}>
+                                  {r.percentage?.toFixed(1)}%
+                                </span>
+                              </td>
+                              <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date(r.submittedAt).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        ))
+            );
+          })}
+        </div>
       )}
     </div>
   );

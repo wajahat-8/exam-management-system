@@ -4,45 +4,64 @@ import { useNavigate, Link } from 'react-router-dom';
 
 const Register = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'student', studentId: '', course: '', department: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); setError(''); setLoading(true);
     try {
       await register(form);
       navigate('/login');
     } catch (err) {
-      const message = err.response?.data?.message || 'Registration failed';
-      alert(message);
-    }
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="auth-container">
-      <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
-        <input name="name" placeholder="Name" value={form.name} onChange={handleChange} required />
-        <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required />
-        <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required />
-        <select name="role" value={form.role} onChange={handleChange}>
-          <option value="student">Student</option>
-          <option value="educator">Educator</option>
-        </select>
-        {form.role === 'student' && (
-          <>
-            <input name="studentId" placeholder="Student ID" value={form.studentId} onChange={handleChange} />
-            <input name="course" placeholder="Course" value={form.course} onChange={handleChange} />
-          </>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f0f2f8 0%, #eef2ff 100%)', padding: '20px' }}>
+      <div className="auth-container" style={{ maxWidth: '460px' }}>
+        <div className="auth-logo">
+          <span className="auth-logo-icon">🎓</span>
+        </div>
+        <h2>Create Account</h2>
+        <p className="auth-subtitle">Join Examsphere — it only takes a minute</p>
+
+        {error && (
+          <div className="alert-error" style={{ marginBottom: '16px' }}>⚠️ {error}</div>
         )}
-        {form.role === 'educator' && (
-          <input name="department" placeholder="Department" value={form.department} onChange={handleChange} />
-        )}
-        <button type="submit">Register</button>
-      </form>
-      <p>Already have an account? <Link to="/login">Login</Link></p>
+
+        <form onSubmit={handleSubmit}>
+          <input id="reg-name" name="name" placeholder="Full name" value={form.name} onChange={handleChange} required autoComplete="name" />
+          <input id="reg-email" name="email" type="email" placeholder="Email address" value={form.email} onChange={handleChange} required autoComplete="email" />
+          <input id="reg-password" name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required autoComplete="new-password" />
+
+          <select id="reg-role" name="role" value={form.role} onChange={handleChange}>
+            <option value="student">👨‍🎓 Student</option>
+            <option value="educator">👨‍🏫 Educator</option>
+          </select>
+
+          {form.role === 'student' && (
+            <>
+              <input id="reg-studentid" name="studentId" placeholder="Student ID (optional)" value={form.studentId} onChange={handleChange} />
+              <input id="reg-course" name="course" placeholder="Course (optional)" value={form.course} onChange={handleChange} />
+            </>
+          )}
+
+          {form.role === 'educator' && (
+            <input id="reg-dept" name="department" placeholder="Department (optional)" value={form.department} onChange={handleChange} />
+          )}
+
+          <button type="submit" className="btn-auth" disabled={loading}>
+            {loading ? '⏳ Creating account…' : '✅ Create Account'}
+          </button>
+        </form>
+
+        <p>Already have an account? <Link to="/login">Sign in →</Link></p>
+      </div>
     </div>
   );
 };

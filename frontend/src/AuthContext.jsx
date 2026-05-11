@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -6,22 +6,31 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser);
+      } catch (err) {
+        localStorage.removeItem('user');
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [token, setToken] = useState(() => {
+    const storedToken = localStorage.getItem('token');
+    // Set axios header synchronously during init (inside lazy initializer)
+    if (storedToken) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+    }
+    return storedToken;
+  });
 
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (err) {
-          console.error('Failed to parse stored user:', err);
-          localStorage.removeItem('user');
-          localStorage.removeItem('token');
-        }
-      }
+    if (!token) {
+      delete axios.defaults.headers.common['Authorization'];
     }
   }, [token]);
 
@@ -43,6 +52,7 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];
   };
 

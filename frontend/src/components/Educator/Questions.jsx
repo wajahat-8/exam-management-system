@@ -1,23 +1,24 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const DIFF_COLORS = {
+  easy:   { bg: 'var(--success-light)', color: 'var(--success)' },
+  medium: { bg: 'var(--warning-light)', color: 'var(--warning)' },
+  hard:   { bg: 'var(--danger-light)',  color: 'var(--danger)'  },
+};
+
 const Questions = () => {
   const [questions, setQuestions] = useState([]);
+  const [search, setSearch] = useState('');
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
-    questionText: '',
-    subject: '',
-    topic: '',
-    difficulty: 'medium',
-    options: ['', '', '', ''],
-    correctAnswer: '',
-    isReusable: true,
+    questionText: '', subject: '', topic: '', difficulty: 'medium',
+    options: ['', '', '', ''], correctAnswer: '', isReusable: true,
   });
 
-  useEffect(() => {
-    refreshQuestions();
-  }, []);
+  useEffect(() => { refreshQuestions(); }, []);
 
   const refreshQuestions = async () => {
     setLoading(true);
@@ -25,163 +26,166 @@ const Questions = () => {
       const res = await axios.get('http://localhost:5000/api/educators/questions');
       setQuestions(res.data);
     } catch (err) {
-      console.error('Failed to fetch questions:', err);
-      alert('Failed to load questions');
-    } finally {
-      setLoading(false);
-    }
+      console.error(err);
+    } finally { setLoading(false); }
   };
 
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
-    if (name.startsWith('option')) {
-      const index = parseInt(name.split('-')[1], 10);
-      const newOptions = [...form.options];
-      newOptions[index] = value;
-      setForm({ ...form, options: newOptions });
-      return;
+    if (name.startsWith('option-')) {
+      const idx = parseInt(name.split('-')[1], 10);
+      const opts = [...form.options]; opts[idx] = value;
+      setForm({ ...form, options: opts }); return;
     }
-
-    if (name === 'isReusable') {
-      setForm({ ...form, isReusable: checked });
-      return;
-    }
-
+    if (name === 'isReusable') { setForm({ ...form, isReusable: checked }); return; }
     setForm({ ...form, [name]: value });
   };
 
   const resetForm = () => {
-    setEditId(null);
-    setForm({
-      questionText: '',
-      subject: '',
-      topic: '',
-      difficulty: 'medium',
-      options: ['', '', '', ''],
-      correctAnswer: '',
-      isReusable: true,
-    });
+    setEditId(null); setShowForm(false);
+    setForm({ questionText: '', subject: '', topic: '', difficulty: 'medium', options: ['','','',''], correctAnswer: '', isReusable: true });
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault(); setLoading(true);
     try {
-      if (editId) {
-        await axios.put(`http://localhost:5000/api/educators/questions/${editId}`, form);
-      } else {
-        await axios.post('http://localhost:5000/api/educators/questions', form);
-      }
-      resetForm();
-      await refreshQuestions();
-    } catch (err) {
-      console.error('Failed to save question:', err);
-      alert('Failed to save question');
-    } finally {
-      setLoading(false);
-    }
+      if (editId) await axios.put(`http://localhost:5000/api/educators/questions/${editId}`, form);
+      else        await axios.post('http://localhost:5000/api/educators/questions', form);
+      resetForm(); await refreshQuestions();
+    } catch (err) { console.error(err); alert('Failed to save question'); }
+    finally { setLoading(false); }
   };
 
-  const handleEdit = (question) => {
-    setEditId(question._id);
-    setForm({
-      questionText: question.questionText || '',
-      subject: question.subject || '',
-      topic: question.topic || '',
-      difficulty: question.difficulty || 'medium',
-      options: question.options && question.options.length ? question.options : ['', '', '', ''],
-      correctAnswer: question.correctAnswer || '',
-      isReusable: question.isReusable !== false,
-    });
+  const handleEdit = (q) => {
+    setEditId(q._id);
+    setForm({ questionText: q.questionText||'', subject: q.subject||'', topic: q.topic||'',
+      difficulty: q.difficulty||'medium', options: q.options?.length===4 ? q.options : ['','','',''],
+      correctAnswer: q.correctAnswer||'', isReusable: q.isReusable !== false });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this question from the bank?')) return;
     setLoading(true);
-    try {
-      await axios.delete(`http://localhost:5000/api/educators/questions/${id}`);
-      await refreshQuestions();
-    } catch (err) {
-      console.error('Failed to delete question:', err);
-      alert('Failed to delete question');
-    } finally {
-      setLoading(false);
-    }
+    try { await axios.delete(`http://localhost:5000/api/educators/questions/${id}`); await refreshQuestions(); }
+    catch (err) { alert('Failed to delete question'); }
+    finally { setLoading(false); }
   };
+
+  const filtered = questions.filter(q =>
+    q.questionText?.toLowerCase().includes(search.toLowerCase()) ||
+    q.subject?.toLowerCase().includes(search.toLowerCase()) ||
+    q.topic?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="panel">
-      <div className="page-title">
-        <h3>Question Bank</h3>
-        <p>Manage your MCQ questions</p>
+      <div className="page-header">
+        <h2>❓ Question Bank</h2>
+        <p>Create and manage your reusable MCQ questions</p>
       </div>
 
-      <div className="panel-form">
-        <h4>{editId ? 'Edit Question' : 'Add New Question'}</h4>
-        <form onSubmit={handleSubmit}>
-          <div className="form-grid">
-            <div className="form-row">
-              <input name="questionText" placeholder="Question Text" value={form.questionText} onChange={handleChange} required />
-            </div>
-            <div className="form-row">
-              <input name="subject" placeholder="Subject" value={form.subject} onChange={handleChange} />
-              <input name="topic" placeholder="Topic" value={form.topic} onChange={handleChange} />
-              <select name="difficulty" value={form.difficulty} onChange={handleChange}>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <input
+          style={{ flex: 1, padding: '10px 14px', border: '1.5px solid var(--border-muted)', borderRadius: 'var(--radius-md)', fontSize: '14px' }}
+          placeholder="🔍  Search questions by text, subject or topic…"
+          value={search} onChange={e => setSearch(e.target.value)}
+        />
+        <button className="button button--primary" onClick={() => { resetForm(); setShowForm(v => !v); }}>
+          {showForm ? '✕ Close' : '＋ New Question'}
+        </button>
+      </div>
 
-              <input name="correctAnswer" placeholder="Correct Answer" value={form.correctAnswer} onChange={handleChange} required />
+      {/* Form */}
+      {showForm && (
+        <div className="panel-form" style={{ animation: 'slideUp 0.3s ease' }}>
+          <h4>{editId ? '✏️ Edit Question' : '➕ New Question'}</h4>
+          <form onSubmit={handleSubmit}>
+            <div className="form-row" style={{ marginBottom: '12px' }}>
+              <textarea name="questionText" rows="3" placeholder="Question text *"
+                value={form.questionText} onChange={handleChange} required
+                style={{ resize: 'vertical' }} />
             </div>
-          </div>
-          <div className="form-grid full-width">
-            <div className="form-row">
-              <input name="option-0" placeholder="Option 1" value={form.options[0]} onChange={handleChange} />
-              <input name="option-1" placeholder="Option 2" value={form.options[1]} onChange={handleChange} />
+            <div className="form-grid">
+              <div className="form-row">
+                <input name="subject" placeholder="Subject" value={form.subject} onChange={handleChange} />
+              </div>
+              <div className="form-row">
+                <input name="topic" placeholder="Topic" value={form.topic} onChange={handleChange} />
+              </div>
+              <div className="form-row">
+                <select name="difficulty" value={form.difficulty} onChange={handleChange}>
+                  <option value="easy">🟢 Easy</option>
+                  <option value="medium">🟡 Medium</option>
+                  <option value="hard">🔴 Hard</option>
+                </select>
+              </div>
+              <div className="form-row">
+                <input name="correctAnswer" placeholder="Correct answer *" value={form.correctAnswer} onChange={handleChange} required />
+              </div>
+              {[0,1,2,3].map(i => (
+                <div className="form-row" key={i}>
+                  <input name={`option-${i}`} placeholder={`Option ${i+1}`} value={form.options[i]} onChange={handleChange} />
+                </div>
+              ))}
             </div>
-            <div className="form-row">
-              <input name="option-2" placeholder="Option 3" value={form.options[2]} onChange={handleChange} />
-              <input name="option-3" placeholder="Option 4" value={form.options[3]} onChange={handleChange} />
+            <div className="checkbox-group" style={{ marginTop: '8px' }}>
+              <label>
+                <input name="isReusable" type="checkbox" checked={form.isReusable} onChange={handleChange} />
+                Reusable in question bank
+              </label>
             </div>
-          </div>
-          <div className="checkbox-group">
-            <label>
-              <input name="isReusable" type="checkbox" checked={form.isReusable} onChange={handleChange} />
-              Reusable in question bank
-            </label>
-          </div>
-          <div className="form-row">
-            <button type="submit" className="button button--primary" disabled={loading}>
-              {loading ? 'Saving...' : (editId ? 'Update Question' : 'Add Question')}
-            </button>
-            {editId && (
-              <button type="button" className="button button--secondary" onClick={resetForm}>
-                Cancel
+            <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+              <button type="submit" className="button button--primary" disabled={loading} style={{ flex: 1 }}>
+                {loading ? 'Saving…' : editId ? '💾 Update Question' : '➕ Add Question'}
               </button>
-            )}
-          </div>
-        </form>
-      </div>
+              {editId && <button type="button" className="button button--ghost" onClick={resetForm}>Cancel</button>}
+            </div>
+          </form>
+        </div>
+      )}
 
-      <div className="panel">
-        <h4>Existing Questions ({questions.length})</h4>
+      {/* List */}
+      <div className="panel-form">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h4>All Questions ({filtered.length})</h4>
+          {search && <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Filtered from {questions.length} total</span>}
+        </div>
         {loading ? (
-          <p>Loading...</p>
+          <div className="loading-state"><div className="spinner" /><span>Loading…</span></div>
+        ) : filtered.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-state-icon">❓</span>
+            <h4>{search ? 'No matching questions' : 'No questions yet'}</h4>
+            <p>{search ? 'Try a different search term.' : 'Click "+ New Question" to add your first question.'}</p>
+          </div>
         ) : (
           <div className="card-list">
-            {questions.map(q => (
-              <div key={q._id} className="card">
-                <h4>{q.questionText}</h4>
-                <p>{q.subject || 'No subject'} / {q.topic || 'No topic'} / {q.difficulty}</p>
-                <p>Answer: {q.correctAnswer}</p>
-                <p>Reusable: {q.isReusable ? 'Yes' : 'No'}</p>
-                <div className="card-footer">
-                  <button className="button button--secondary" onClick={() => handleEdit(q)}>Edit</button>
-                  <button className="button button--danger" onClick={() => handleDelete(q._id)}>Delete</button>
+            {filtered.map(q => {
+              const dc = DIFF_COLORS[q.difficulty] || DIFF_COLORS.medium;
+              return (
+                <div key={q._id} className="card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                    <h4 style={{ flex: 1, margin: 0, fontSize: '15px', lineHeight: '1.5' }}>{q.questionText}</h4>
+                    <span style={{ padding: '3px 10px', borderRadius: 'var(--radius-full)', fontSize: '12px', fontWeight: 600, background: dc.bg, color: dc.color, flexShrink: 0 }}>
+                      {q.difficulty}
+                    </span>
+                  </div>
+                  <div className="card-meta">
+                    {q.subject && <span className="badge">{q.subject}</span>}
+                    {q.topic   && <span className="badge badge--info">{q.topic}</span>}
+                    <span className="badge badge--success">✓ {q.correctAnswer}</span>
+                    {q.isReusable && <span className="badge">♻️ Reusable</span>}
+                  </div>
+                  <div className="card-footer">
+                    <button className="button button--secondary button--sm" onClick={() => handleEdit(q)}>✏️ Edit</button>
+                    <button className="button button--danger button--sm" onClick={() => handleDelete(q._id)}>🗑️ Delete</button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
