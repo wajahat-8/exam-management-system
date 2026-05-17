@@ -50,7 +50,8 @@ exports.getQuestions = async (req, res) => {
     if (req.query.topic) filter.topic = req.query.topic;
     if (req.query.difficulty) filter.difficulty = req.query.difficulty;
 
-    // Show the full question bank for reuse, with optional filtering.
+    // Each educator sees only their own questions (matches delete/update permissions).
+    filter.educator = req.user.id;
     const questions = await Question.find(filter).sort({ createdAt: -1 });
     res.json(questions);
   } catch (err) {
@@ -180,7 +181,9 @@ exports.deleteQuestion = async (req, res) => {
   try {
     const question = await Question.findById(req.params.id);
     if (!question) return res.status(404).json({ message: 'Question not found' });
-    if (question.educator.toString() !== req.user.id) return res.status(403).json({ message: 'Unauthorized' });
+    if (question.educator.toString() !== String(req.user.id)) {
+      return res.status(403).json({ message: 'You can only delete your own questions' });
+    }
     await question.deleteOne();
     res.json({ message: 'Question deleted' });
   } catch (err) {
@@ -322,7 +325,7 @@ exports.generateReport = async (req, res) => {
     const reports = [];
 
     for (const exam of exams) {
-      const results = await Result.find({ exam: exam._id }).populate('student', 'name');
+      const results = await Result.find({ exam: exam._id }).populate('student', 'name studentId');
       const totalStudents = results.length;
       const averageScore = totalStudents > 0
         ? results.reduce((sum, r) => sum + (r.percentage || 0), 0) / totalStudents
@@ -335,7 +338,7 @@ exports.generateReport = async (req, res) => {
         totalStudents,
         results: results.map((result) => ({
           resultId: result._id,
-          studentId: result.student?._id || null,
+          studentId: result.student?.studentId || result.student?._id || null,
           studentName: result.student?.name || 'Unknown',
           score: result.score,
           totalQuestions: result.totalQuestions,
@@ -347,6 +350,17 @@ exports.generateReport = async (req, res) => {
 
     res.json(reports);
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getStudents = async (req, res) => {
+  try {
+    const students = await User.find({ role: 'student' }).select('name email studentId');
+    console.log('getStudents hit, found:', students.length);
+    res.json(students);
+  } catch (err) {
+    console.error('getStudents error:', err);
     res.status(500).json({ message: err.message });
   }
 };

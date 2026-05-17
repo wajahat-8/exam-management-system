@@ -14,12 +14,14 @@ const {
   deleteExam,
   getExams,
   getStudentPerformance,
-  generateReport
+  generateReport,
+  getStudents
 } = require('../controllers/educatorController');
 
 router.use(auth);
 router.use(roleAuth(['educator']));
 
+router.get('/students', getStudents);
 router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
 router.post('/questions', createQuestion);

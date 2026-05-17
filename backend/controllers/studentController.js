@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Exam = require('../models/Exam');
 const Result = require('../models/Result');
+const { isStudentEnrolled, toObjectId } = require('../utils/enrollment');
 
 exports.getProfile = async (req, res) => {
   try {
@@ -24,7 +25,7 @@ exports.updateProfile = async (req, res) => {
 exports.getEnrolledExams = async (req, res) => {
   try {
     const student = await User.findById(req.user.id);
-    const query = { $or: [{ enrolledStudents: req.user.id }] };
+    const query = { $or: [{ enrolledStudents: toObjectId(req.user.id) }] };
 
     if (student.course) query.$or.push({ assignedCourses: student.course });
     if (student.department) query.$or.push({ assignedDepartments: student.department });
@@ -40,7 +41,7 @@ exports.joinExam = async (req, res) => {
   const { examCode } = req.body;
   try {
     const groupId = examCode;
-    const existingAssigned = await Exam.findOne({ groupId, enrolledStudents: req.user.id });
+    const existingAssigned = await Exam.findOne({ groupId, enrolledStudents: toObjectId(req.user.id) });
     if (existingAssigned) {
       return res.json(existingAssigned);
     }
@@ -51,7 +52,7 @@ exports.joinExam = async (req, res) => {
     }
 
     const selected = exams[Math.floor(Math.random() * exams.length)];
-    selected.enrolledStudents.push(req.user.id);
+    selected.enrolledStudents.push(toObjectId(req.user.id));
     await selected.save();
     res.json(selected);
   } catch (err) {
@@ -79,7 +80,7 @@ exports.getExamForTaking = async (req, res) => {
     if (!exam) {
       return res.status(404).json({ message: 'Exam not found' });
     }
-    if (!exam.enrolledStudents.includes(req.user.id)) {
+    if (!isStudentEnrolled(exam.enrolledStudents, req.user.id)) {
       return res.status(403).json({ message: 'Not enrolled in this exam' });
     }
 
@@ -109,7 +110,7 @@ exports.submitExam = async (req, res) => {
     if (!exam) {
       return res.status(404).json({ message: 'Exam not found' });
     }
-    if (!exam.enrolledStudents.includes(req.user.id)) {
+    if (!isStudentEnrolled(exam.enrolledStudents, req.user.id)) {
       return res.status(403).json({ message: 'Not enrolled in this exam' });
     }
 

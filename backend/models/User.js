@@ -7,7 +7,17 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['student', 'educator', 'admin'], required: true },
   // Student specific
-  studentId: { type: String },
+  studentId: { 
+    type: String, 
+    sparse: true, 
+    unique: true,
+    validate: {
+      validator: function(v) {
+        return !v || /^\d{5}$/.test(v);
+      },
+      message: props => `Student ID must be exactly 5 digits.`
+    }
+  },
   course: { type: String },
   // Educator specific
   department: { type: String },

@@ -8,6 +8,10 @@ exports.register = async (req, res) => {
     await user.save();
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {
+    if (err.code === 11000) {
+      if (err.keyPattern?.studentId) return res.status(400).json({ message: 'This Student ID is already registered.' });
+      if (err.keyPattern?.email) return res.status(400).json({ message: 'This email is already registered.' });
+    }
     res.status(400).json({ message: err.message });
   }
 };
