@@ -9,10 +9,12 @@
   width: min(100%, 440px);
   margin: 60px auto;
   padding: 40px 36px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass);
   border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-large);
+  box-shadow: var(--shadow-glass), 0 24px 64px rgba(79,70,229,0.1);
   position: relative;
   overflow: hidden;
   animation: slideUp 0.5s var(--transition-slow);
@@ -22,7 +24,9 @@
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; height: 4px;
-  background: var(--gradient-brand);
+  background: var(--gradient-aurora);
+  background-size: 300% 300%;
+  animation: auroraShift 5s ease infinite;
 }
 
 .auth-logo {
@@ -40,6 +44,7 @@
   margin: 0 0 6px;
   font-size: 1.75rem;
   font-weight: 800;
+  font-family: var(--font-heading);
   color: var(--text-primary);
   text-align: center;
 }
@@ -116,14 +121,18 @@
 .sidebar {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
+  max-width: var(--sidebar-width);
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
   height: 100vh;
+  overflow-x: hidden;
   overflow-y: auto;
   z-index: 100;
+  box-shadow: 4px 0 24px rgba(15,23,42,0.15);
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -151,10 +160,11 @@
 }
 
 .sidebar-brand-name {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
+  font-family: var(--font-heading);
   color: white;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
 }
 
 .sidebar-user {
@@ -291,6 +301,18 @@
   min-width: 0;
 }
 
+/* Student notification — no full-width white bar */
+.dashboard-topbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin: -8px 0 12px;
+  min-height: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
 /* ── Panels ── */
 .panel {
   display: grid;
@@ -309,8 +331,9 @@
 
 .panel-form h4 {
   margin: 0;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
+  font-family: var(--font-heading);
   color: var(--text-primary);
 }
 
@@ -321,10 +344,11 @@
 
 .page-header h2 {
   margin: 0 0 6px;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 800;
+  font-family: var(--font-heading);
   color: var(--text-primary);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
 }
 
 .page-header p {
@@ -358,26 +382,29 @@
   border-radius: var(--radius-xl);
   padding: 24px 20px;
   box-shadow: var(--shadow-soft);
-  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  transition: box-shadow var(--transition-base), transform var(--transition-bounce), border-color var(--transition-base);
   position: relative;
   overflow: hidden;
+  cursor: default;
 }
 
 .stat-card:hover {
-  box-shadow: var(--shadow-medium);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-brand);
+  transform: translateY(-4px);
+  border-color: rgba(79,70,229,0.2);
 }
 
 .stat-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; height: 3px;
-  background: var(--gradient-brand);
-  opacity: 0.7;
+  background: var(--gradient-aurora);
+  background-size: 300% 300%;
+  animation: auroraShift 6s ease infinite;
 }
 
 .stat-card-icon {
-  font-size: 26px;
+  font-size: 28px;
   margin-bottom: 12px;
   display: block;
 }
@@ -385,6 +412,7 @@
 .stat-card-value {
   font-size: 32px;
   font-weight: 800;
+  font-family: var(--font-heading);
   color: var(--text-primary);
   line-height: 1;
   margin-bottom: 6px;
@@ -398,14 +426,16 @@
 
 /* ── Welcome Banner ── */
 .welcome-banner {
-  background: var(--gradient-brand);
+  background: var(--gradient-aurora);
+  background-size: 300% 300%;
+  animation: auroraShift 8s ease infinite, slideUp 0.4s ease-out;
   border-radius: var(--radius-2xl);
   padding: 32px 36px;
   color: white;
   margin-bottom: 28px;
   position: relative;
   overflow: hidden;
-  animation: slideUp 0.4s ease-out;
+  box-shadow: var(--shadow-brand-lg);
 }
 
 .welcome-banner::after {
@@ -415,13 +445,15 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 80px;
-  opacity: 0.15;
+  opacity: 0.12;
+  animation: floatBob 4s ease-in-out infinite;
 }
 
 .welcome-banner h2 {
   margin: 0 0 8px;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 800;
+  font-family: var(--font-heading);
   color: white;
 }
 
@@ -440,12 +472,13 @@
   background: var(--bg-surface);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-soft);
-  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  transition: box-shadow var(--transition-base), transform var(--transition-bounce), border-color var(--transition-base);
 }
 
 .card:hover {
-  box-shadow: var(--shadow-medium);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium), 0 0 0 1px rgba(79,70,229,0.08);
+  transform: translateY(-3px);
+  border-color: rgba(79,70,229,0.15);
 }
 
 .card h4 { margin: 0 0 10px; font-size: 16px; font-weight: 700; }
@@ -484,21 +517,27 @@
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: transform var(--transition-base), box-shadow var(--transition-base), background var(--transition-fast), opacity var(--transition-fast);
+  transition: transform var(--transition-bounce), box-shadow var(--transition-base), background var(--transition-fast), opacity var(--transition-fast);
   text-decoration: none;
+  position: relative;
+  overflow: hidden;
 }
 
-.button:hover { transform: translateY(-1px); text-decoration: none; }
-.button:active { transform: translateY(0); }
+.button:hover { transform: translateY(-2px); text-decoration: none; }
+.button:active { transform: scale(0.97) translateY(0); }
 .button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
 .button--primary {
   background: var(--gradient-brand);
+  background-size: 200% 200%;
   color: #fff;
   box-shadow: var(--shadow-brand);
 }
 
-.button--primary:hover { box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3); }
+.button--primary:hover {
+  box-shadow: var(--shadow-brand-lg);
+  background-position: right center;
+}
 
 .button--secondary {
   background: var(--bg-surface-muted);
@@ -514,7 +553,7 @@
   border: 1px solid var(--danger-border);
 }
 
-.button--danger:hover { background: var(--danger); color: white; }
+.button--danger:hover { background: var(--danger); color: white; box-shadow: var(--shadow-danger); }
 
 .button--success {
   background: var(--success-light);
@@ -522,7 +561,7 @@
   border: 1px solid var(--success-border);
 }
 
-.button--success:hover { background: var(--success); color: white; }
+.button--success:hover { background: var(--success); color: white; box-shadow: var(--shadow-success); }
 
 .button--ghost {
   background: transparent;
@@ -561,13 +600,13 @@ form input,
 form select,
 form textarea {
   width: 100%;
-  padding: 12px 14px;
+  padding: 12px 16px;
   border: 1.5px solid var(--border-muted);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--bg-surface);
   color: var(--text-primary);
   font-size: 14px;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), background var(--transition-fast);
   margin-top: 0;
 }
 
@@ -576,7 +615,8 @@ form select:focus,
 form textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 4px rgba(79,70,229,0.12);
+  background: var(--bg-accent);
 }
 
 form input::placeholder,
@@ -591,12 +631,13 @@ form button {
   border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
-  width: 100%;
+  width: auto;
   box-shadow: var(--shadow-brand);
-  transition: opacity var(--transition-fast), transform var(--transition-base);
+  transition: opacity var(--transition-fast), transform var(--transition-bounce);
 }
 
-form button:hover { opacity: 0.92; transform: translateY(-1px); }
+form button:hover { opacity: 0.92; transform: translateY(-2px); box-shadow: var(--shadow-brand-lg); }
+form button.full-width { width: 100%; }
 
 .checkbox-group {
   display: flex;
@@ -663,12 +704,24 @@ form button:hover { opacity: 0.92; transform: translateY(-1px); }
   font-weight: 600;
   background: var(--badge-bg);
   color: var(--badge-text);
+  transition: box-shadow var(--transition-base);
 }
 
-.badge--success { background: var(--success-light); color: var(--success); }
+.badge--success {
+  background: var(--success-light);
+  color: var(--success);
+}
+.badge--success.active, .badge--success:hover {
+  box-shadow: 0 0 0 3px var(--success-glow);
+}
 .badge--warning { background: var(--warning-light); color: var(--warning); }
 .badge--danger  { background: var(--danger-light); color: var(--danger); }
-.badge--info    { background: var(--info-light); color: var(--info); }
+.badge--danger.active { box-shadow: 0 0 0 3px var(--danger-glow); }
+.badge--info    {
+  background: var(--info-light);
+  color: var(--info);
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
 
 .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 

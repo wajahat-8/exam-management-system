@@ -56,11 +56,11 @@ const Exams = () => {
       <div className="panel-form">
         <h4>🔑 Join an Exam</h4>
         <p style={{ margin: '0 0 16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-          Enter the exam code provided by your educator.
+          Enter the <strong>group ID</strong> your educator shared (e.g. GRP-ABC123).
         </p>
         <form onSubmit={handleJoin} style={{ display: 'flex', gap: '10px' }}>
           <input
-            placeholder="Enter exam code…"
+            placeholder="Enter group ID…"
             value={examCode}
             onChange={e => setExamCode(e.target.value)}
             required

@@ -11,7 +11,9 @@ const Questions = () => {
   const [questions, setQuestions] = useState([]);
   const [search, setSearch] = useState('');
   const [editId, setEditId] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [listLoading, setListLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     questionText: '', subject: '', topic: '', difficulty: 'medium',
@@ -21,13 +23,17 @@ const Questions = () => {
   useEffect(() => { refreshQuestions(); }, []);
 
   const refreshQuestions = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const res = await axios.get('http://localhost:5000/api/educators/questions');
       setQuestions(res.data);
     } catch (err) {
       console.error(err);
-    } finally { setLoading(false); }
+      const msg = err.response?.data?.message || 'Could not load questions. Is the backend running on port 5000?';
+      alert(msg);
+    } finally {
+      setListLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -42,18 +48,34 @@ const Questions = () => {
   };
 
   const resetForm = () => {
-    setEditId(null); setShowForm(false);
+    setEditId(null);
     setForm({ questionText: '', subject: '', topic: '', difficulty: 'medium', options: ['','','',''], correctAnswer: '', isReusable: true });
   };
 
+  const openForm = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    resetForm();
+    setShowForm(false);
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault(); setLoading(true);
+    e.preventDefault();
+    setSaving(true);
     try {
       if (editId) await axios.put(`http://localhost:5000/api/educators/questions/${editId}`, form);
-      else        await axios.post('http://localhost:5000/api/educators/questions', form);
-      resetForm(); await refreshQuestions();
-    } catch (err) { console.error(err); alert('Failed to save question'); }
-    finally { setLoading(false); }
+      else await axios.post('http://localhost:5000/api/educators/questions', form);
+      closeForm();
+      await refreshQuestions();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Failed to save question');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleEdit = (q) => {
@@ -61,16 +83,23 @@ const Questions = () => {
     setForm({ questionText: q.questionText||'', subject: q.subject||'', topic: q.topic||'',
       difficulty: q.difficulty||'medium', options: q.options?.length===4 ? q.options : ['','','',''],
       correctAnswer: q.correctAnswer||'', isReusable: q.isReusable !== false });
-    setShowForm(true);
+    openForm();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this question from the bank?')) return;
-    setLoading(true);
-    try { await axios.delete(`http://localhost:5000/api/educators/questions/${id}`); await refreshQuestions(); }
-    catch (err) { alert('Failed to delete question'); }
-    finally { setLoading(false); }
+    setDeletingId(id);
+    try {
+      await axios.delete(`http://localhost:5000/api/educators/questions/${id}`);
+      await refreshQuestions();
+    } catch (err) {
+      const msg = err.response?.data?.message
+        || (err.request ? 'Cannot reach server. Start the backend: npm run dev:backend' : 'Failed to delete question');
+      alert(msg);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const filtered = questions.filter(q =>
@@ -93,7 +122,11 @@ const Questions = () => {
           placeholder="🔍  Search questions by text, subject or topic…"
           value={search} onChange={e => setSearch(e.target.value)}
         />
-        <button className="button button--primary" onClick={() => { resetForm(); setShowForm(v => !v); }}>
+        <button
+          type="button"
+          className="button button--primary"
+          onClick={() => (showForm ? closeForm() : openForm())}
+        >
           {showForm ? '✕ Close' : '＋ New Question'}
         </button>
       </div>
@@ -138,10 +171,12 @@ const Questions = () => {
               </label>
             </div>
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-              <button type="submit" className="button button--primary" disabled={loading} style={{ flex: 1 }}>
-                {loading ? 'Saving…' : editId ? '💾 Update Question' : '➕ Add Question'}
+              <button type="submit" className="button button--primary" disabled={saving} style={{ flex: 1 }}>
+                {saving ? 'Saving…' : editId ? '💾 Update Question' : '➕ Add Question'}
               </button>
-              {editId && <button type="button" className="button button--ghost" onClick={resetForm}>Cancel</button>}
+              <button type="button" className="button button--ghost" onClick={closeForm} disabled={saving}>
+                Cancel
+              </button>
             </div>
           </form>
         </div>
@@ -153,7 +188,7 @@ const Questions = () => {
           <h4>All Questions ({filtered.length})</h4>
           {search && <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Filtered from {questions.length} total</span>}
         </div>
-        {loading ? (
+        {listLoading ? (
           <div className="loading-state"><div className="spinner" /><span>Loading…</span></div>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
@@ -181,7 +216,13 @@ const Questions = () => {
                   </div>
                   <div className="card-footer">
                     <button className="button button--secondary button--sm" onClick={() => handleEdit(q)}>✏️ Edit</button>
-                    <button className="button button--danger button--sm" onClick={() => handleDelete(q._id)}>🗑️ Delete</button>
+                    <button
+                      className="button button--danger button--sm"
+                      onClick={() => handleDelete(q._id)}
+                      disabled={deletingId === q._id}
+                    >
+                      {deletingId === q._id ? 'Deleting…' : '🗑️ Delete'}
+                    </button>
                   </div>
                 </div>
               );

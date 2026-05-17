@@ -5,12 +5,14 @@ import Questions from './Questions.jsx';
 import Exams from './Exams.jsx';
 import Reports from './Reports.jsx';
 import Monitoring from './Monitoring.jsx';
+import Notifications from './Notifications.jsx';
 
 const NAV = [
   { to: '/educator/exams',      icon: '📋', label: 'Exams' },
   { to: '/educator/questions',  icon: '❓', label: 'Question Bank' },
   { to: '/educator/monitoring', icon: '👁️', label: 'Monitoring' },
   { to: '/educator/reports',    icon: '📊', label: 'Reports' },
+  { to: '/educator/notifications', icon: '📢', label: 'Notifications' },
   { to: '/educator/profile',    icon: '👤', label: 'Profile' },
 ];
 
@@ -69,6 +71,7 @@ const EducatorDashboard = () => {
           <Route path="exams"      element={<Exams />} />
           <Route path="monitoring" element={<Monitoring />} />
           <Route path="reports"    element={<Reports />} />
+          <Route path="notifications" element={<Notifications />} />
         </Routes>
       </main>
     </div>

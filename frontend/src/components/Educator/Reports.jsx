@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import AnalyticsDashboard from './AnalyticsDashboard.jsx';
 
 const Reports = () => {
   const [reports, setReports] = useState([]);
@@ -22,6 +23,25 @@ const Reports = () => {
   const avgScore = reports.length
     ? (reports.reduce((a, r) => a + r.averageScore, 0) / reports.length).toFixed(1)
     : 0;
+
+  const handleExport = (examId, format) => {
+    const token = localStorage.getItem('token');
+    // Using fetch to handle blob download with authorization header
+    fetch(`http://localhost:5000/api/reports/export/${examId}?format=${format}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(res => res.blob())
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Exam_Report_${examId}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    })
+    .catch(err => console.error('Export failed', err));
+  };
 
   return (
     <div className="panel">
@@ -47,6 +67,9 @@ const Reports = () => {
         </div>
       )}
 
+      {/* Analytics Dashboard */}
+      {!loading && reports.length > 0 && <AnalyticsDashboard />}
+
       {loading ? (
         <div className="loading-state"><div className="spinner" /><span>Loading reports…</span></div>
       ) : reports.length === 0 ? (
@@ -71,11 +94,19 @@ const Reports = () => {
                       <span className="badge">👥 {report.totalStudents} students</span>
                     </div>
                   </div>
-                  {/* Score ring */}
-                  <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                    <div style={{ width: 72, height: 72, borderRadius: '50%', border: `5px solid ${color}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-muted)' }}>
-                      <span style={{ fontSize: '17px', fontWeight: 800, color, lineHeight: 1 }}>{pct}%</span>
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>avg</span>
+                  {/* Score ring & Actions */}
+                  <div style={{ textAlign: 'center', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className="button button--secondary button--sm" onClick={() => handleExport(report.examId, 'pdf')}>
+                        📄 PDF
+                      </button>
+                      <button className="button button--secondary button--sm" onClick={() => handleExport(report.examId, 'excel')}>
+                        📊 Excel
+                      </button>
+                    </div>
+                    <div style={{ width: 64, height: 64, borderRadius: '50%', border: `4px solid ${color}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-muted)' }}>
+                      <span style={{ fontSize: '15px', fontWeight: 800, color, lineHeight: 1 }}>{pct}%</span>
+                      <span style={{ fontSize: '9px', color: 'var(--text-muted)', marginTop: '2px' }}>avg</span>
                     </div>
                   </div>
                 </div>

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import FeedbackModal from './FeedbackModal.jsx';
+import IssueModal from './IssueModal.jsx';
 
 const ScoreRing = ({ pct }) => {
   const color = pct >= 70 ? 'var(--success)' : pct >= 40 ? 'var(--warning)' : 'var(--danger)';
@@ -21,6 +23,8 @@ const Results = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
+  const [feedbackExamId, setFeedbackExamId] = useState(null);
+  const [issueExamId, setIssueExamId] = useState(null);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -93,15 +97,32 @@ const Results = () => {
                   <ScoreRing pct={pct} />
                 </div>
 
-                <div className="result-card-actions">
+                <div className="result-card-actions" style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
                   {result.answers?.length > 0 && (
                     <button
-                      className="button button--secondary button--full-width"
+                      className="button button--secondary"
+                      style={{ flex: 1 }}
                       onClick={() => setExpandedId(isExpanded ? null : result._id)}
                     >
                       {isExpanded ? '▲ Hide Breakdown' : '▼ View Question Breakdown'}
                     </button>
                   )}
+                  <button 
+                    className="button button--secondary"
+                    style={{ padding: '8px 12px' }}
+                    title="Provide Feedback"
+                    onClick={() => setFeedbackExamId(result.exam?._id)}
+                  >
+                    ⭐
+                  </button>
+                  <button 
+                    className="button button--secondary"
+                    style={{ padding: '8px 12px' }}
+                    title="Report an Issue"
+                    onClick={() => setIssueExamId(result.exam?._id)}
+                  >
+                    ⚠️
+                  </button>
                 </div>
 
                 {isExpanded && (
@@ -147,6 +168,9 @@ const Results = () => {
           })}
         </div>
       )}
+
+      {feedbackExamId && <FeedbackModal examId={feedbackExamId} onClose={() => setFeedbackExamId(null)} />}
+      {issueExamId && <IssueModal examId={issueExamId} onClose={() => setIssueExamId(null)} />}
     </div>
   );
 };

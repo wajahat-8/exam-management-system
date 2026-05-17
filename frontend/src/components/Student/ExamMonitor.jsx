@@ -115,6 +115,12 @@ const ExamMonitor = ({ examId, onViolation }) => {
       if (watchIdRef.current) {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
+      // End backend session when student leaves the exam
+      axios.post(
+        'http://localhost:5000/api/monitoring/end',
+        { examId },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      ).catch((err) => console.error('Failed to end monitoring on unmount:', err));
     };
   }, [examId]);
 

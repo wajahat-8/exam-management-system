@@ -1,0 +1,12 @@
+services:
+  mongo:
+    image: mongo:7-jammy
+    container_name: ems-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ems-mongo-data:/data/db
+    restart: unless-stopped
+
+volumes:
+  ems-mongo-data:

@@ -1,8 +1,6 @@
 :root {
   color-scheme: light;
-  font-family: Inter, system-ui, sans-serif;
-  color: #1f2937;
-  background: #f3f6fb;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 * {
@@ -16,7 +14,10 @@ html, body, #root {
 }
 
 body {
-  background: #f3f6fb;
+  background:
+    radial-gradient(ellipse at 70% 10%, rgba(79,70,229,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 90%, rgba(124,58,237,0.06) 0%, transparent 50%),
+    #f0f2f8;
   line-height: 1.5;
 }
 
@@ -29,7 +30,5 @@ textarea {
 
 #root {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
   min-height: 100vh;
 }

@@ -5,7 +5,7 @@ import Profile from './Profile.jsx';
 import Exams from './Exams.jsx';
 import Results from './Results.jsx';
 import TakeExam from './TakeExam.jsx';
-import CameraCheck from './CameraCheck.jsx';
+import NotificationBell from './NotificationBell.jsx';
 
 const NAV = [
   { to: '/student/exams',   icon: '📋', label: 'My Exams' },
@@ -19,13 +19,7 @@ const getInitials = (name = '') =>
 const StudentDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [cameraGranted, setCameraGranted] = useState(false);
-
   const handleLogout = () => { logout(); navigate('/login'); };
-
-  if (!cameraGranted) {
-    return <CameraCheck onVerified={() => setCameraGranted(true)} />;
-  }
 
   return (
     <div className="dashboard">
@@ -66,6 +60,9 @@ const StudentDashboard = () => {
       </aside>
 
       <main className="dashboard-main">
+        <div className="dashboard-topbar">
+          <NotificationBell />
+        </div>
         <Routes>
           <Route path="/" element={<StudentHome user={user} />} />
           <Route path="profile"         element={<Profile />} />

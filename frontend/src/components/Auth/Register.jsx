@@ -46,7 +46,7 @@ const Register = () => {
 
           {form.role === 'student' && (
             <>
-              <input id="reg-studentid" name="studentId" placeholder="Student ID (optional)" value={form.studentId} onChange={handleChange} />
+              <input id="reg-studentid" name="studentId" placeholder="5-digit Student ID" value={form.studentId} onChange={handleChange} required pattern="\d{5}" title="Student ID must be exactly 5 digits" />
               <input id="reg-course" name="course" placeholder="Course (optional)" value={form.course} onChange={handleChange} />
             </>
           )}

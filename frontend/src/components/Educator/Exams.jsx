@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import EditExamModal from './EditExamModal.jsx';
 
 const getExamStatus = (scheduledDate) => {
   const now = new Date();
@@ -23,6 +24,7 @@ const Exams = () => {
   const [lastSavedVariant, setLastSavedVariant] = useState(null);
   const [variantCount, setVariantCount] = useState(0);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [editingExam, setEditingExam] = useState(null);
 
   useEffect(() => { refreshData(); }, []);
 
@@ -163,7 +165,10 @@ const Exams = () => {
                     <p><strong>👥 Enrolled:</strong> {exam.enrolledStudents?.length ?? 0} students</p>
                     {exam.groupName && <p><strong>📁 Group:</strong> {exam.groupName}</p>}
                   </div>
-                  <div className="card-footer">
+                  <div className="card-footer" style={{ display: 'flex', gap: '8px' }}>
+                    {status.label !== 'Completed' && !isDel && (
+                      <button className="button button--secondary button--sm" onClick={() => setEditingExam(exam)}>✏️ Edit</button>
+                    )}
                     {isDel ? (
                       <>
                         <span style={{ fontSize: '13px', color: 'var(--danger)', fontWeight: 600 }}>Confirm delete?</span>
@@ -304,6 +309,15 @@ const Exams = () => {
             </>
           )}
         </div>
+      )}
+
+      {editingExam && (
+        <EditExamModal 
+          exam={editingExam}
+          questions={questions}
+          onClose={() => setEditingExam(null)} 
+          onRefresh={refreshData} 
+        />
       )}
     </div>
   );
