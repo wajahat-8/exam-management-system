@@ -2,6 +2,7 @@ const Exam = require('../models/Exam');
 const Result = require('../models/Result');
 const Feedback = require('../models/Feedback');
 const Issue = require('../models/Issue');
+const User = require('../models/User');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const path = require('path');

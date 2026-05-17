@@ -114,6 +114,12 @@ exports.submitExam = async (req, res) => {
       return res.status(403).json({ message: 'Not enrolled in this exam' });
     }
 
+    // Check if student has already taken this exam
+    const existingResult = await Result.findOne({ student: req.user.id, exam: req.params.id });
+    if (existingResult) {
+      return res.status(400).json({ message: 'You have already completed this exam' });
+    }
+
     // Calculate score
     let score = 0;
     const totalQuestions = exam.questions.length;

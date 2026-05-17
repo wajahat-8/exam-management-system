@@ -13,6 +13,7 @@ const TakeExam = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [violationCount, setViolationCount] = useState(0);
   const [timeTracker, setTimeTracker] = useState({});
   const [examStarted, setExamStarted] = useState(false);
@@ -80,25 +81,27 @@ const TakeExam = () => {
   };
 
   const handleSubmit = async () => {
-    if (submitting) return; // Prevent multiple submissions
+    if (submitting || submitted) return; // Prevent multiple submissions
     setSubmitting(true);
     try {
       await axios.post(`http://localhost:5000/api/students/submit/${id}`, { 
         answers, 
         timeTracker 
       });
+      setSubmitted(true);
       alert('Exam submitted successfully');
       navigate('/student/results');
     } catch (err) {
       console.error('Failed to submit exam:', err);
       alert('Failed to submit exam');
-    } finally {
       setSubmitting(false);
     }
   };
 
   const handleViolation = (count, type) => {
     setViolationCount(count);
+    if (submitting || submitted) return; // Don't trigger auto-submit if already submitting or submitted
+    
     // Auto-submit only on severe/immediate violations like tab switch, window blur, or camera covered
     if ((type === 'tab_switch' || type === 'screen_blur' || type === 'face_absence') && !submitting) {
       alert(`Violation detected (${type}). Your exam is being automatically submitted.`);

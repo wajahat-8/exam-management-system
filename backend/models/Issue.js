@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const IssueSchema = new mongoose.Schema({
   examId: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
+  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   category: { type: String, enum: ['Technical','Content','Accessibility','Other'], required: true },
   description: { type: String, required: true },
   screenshotUrl: { type: String },
